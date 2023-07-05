@@ -4,7 +4,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "app" {
-  ami           = "ami-0c94855ba95c574c8"  # Update this with the latest Amazon Linux 2 LTS AMI ID
+  ami           = "ami-02d8bad0a1da4b6fd"  # Update this with the latest Amazon Linux 2 LTS AMI ID
   instance_type = "t2.micro"
 
   tags = {
