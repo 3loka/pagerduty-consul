@@ -1,0 +1,14 @@
+.table {
+    display: table;
+    width: 100%;
+}
+
+.table-header, .table-row {
+    display: table-row;
+}
+
+.table-header > div, .table-row > div {
+    display: table-cell;
+    padding: 10px;
+    border: 1px solid #ddd;
+}

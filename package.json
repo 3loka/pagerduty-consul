@@ -1,0 +1,26 @@
+{
+    "name": "webhook-tester",
+    "version": "1.0.0",
+    "description": "A simple app to test and demonstrate webhooks.",
+    "main": "backend/app.js",
+    "scripts": {
+        "start": "node backend/app.js"
+    },
+    "keywords": [
+        "webhook",
+        "test",
+        "node",
+        "express"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^0.21.1",
+        "body-parser": "^1.19.0",
+        "express": "^4.17.1",
+        "mongoose": "^5.12.3",
+        "pg": "^8.11.1",
+        "pg-hstore": "^2.3.4",
+        "sequelize": "^6.32.1"
+    }
+}

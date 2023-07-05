@@ -1,0 +1,43 @@
+# .github/workflows/deploy.yml
+name: Deploy to EC2
+# on:
+#   push:
+#     branches:
+#       - main  # Replace with your production branch if not using 'main'
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2  # Change to your preferred AWS region
+
+      - name: Set up Docker
+        uses: docker-practice/actions-setup-docker@master
+
+      - name: Build Docker image
+        run: docker build -t my-app .
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ steps.ip.outputs.ip }} >> ~/.ssh/known_hosts
+
+      - name: Get EC2 public IP
+        id: ip
+        run: terraform output -raw instance_public_ip
+
+      - name: Deploy to EC2
+        run: |
+          docker save my-app | ssh -o StrictHostKeyChecking=no ec2-user@${{ steps.ip.outputs.ip }} docker load
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ steps.ip.outputs.ip }} docker run -d -p 80:3000 my-app
