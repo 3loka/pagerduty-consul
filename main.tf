@@ -3,7 +3,7 @@ resource "tls_private_key" "example" {
 }
 
 resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
+  key_name   = "deployer-key-new"
   public_key = tls_private_key.example.public_key_openssh
 }
 
@@ -13,8 +13,8 @@ resource "local_file" "private_key" {
   file_permission   = "0600"
 }
 
-resource "aws_security_group" "allow_http_new" {
-  name        = "allow_http_new"
+resource "aws_security_group" "allow_http_new1" {
+  name        = "allow_http_new1"
   description = "Allow inbound traffic on port 3000 and SSH"
 
   ingress {
@@ -41,7 +41,7 @@ resource "aws_security_group" "allow_http_new" {
   }
 
   tags = {
-    Name = "allow_http"
+    Name = "allow_http1"
   }
 }
 
@@ -50,7 +50,7 @@ resource "aws_instance" "app" {
   ami           = "ami-02d8bad0a1da4b6fd"  # Update this with the latest Amazon Linux 2 LTS AMI ID
   instance_type = "t2.micro"
   key_name      = aws_key_pair.deployer.key_name  # Assign the key pair to the instance
-  security_groups = [aws_security_group.allow_http_new.name]  # Add the security group
+  security_groups = [aws_security_group.allow_http_new1.name]  # Add the security group
 
   tags = {
     Name = "my-app-instance-new"
