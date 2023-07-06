@@ -1,11 +1,9 @@
 # .github/workflows/deploy.yml
 name: Deploy to EC2
-# on:
-#   push:
-#     branches:
-#       - main  # Replace with your production branch if not using 'main'
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main  # Replace with your production branch if not using 'main'
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -26,18 +24,18 @@ jobs:
       - name: Build Docker image
         run: docker build -t my-app .
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ steps.ip.outputs.ip }} >> ~/.ssh/known_hosts
-
       - name: Get EC2 public IP
         id: ip
         run: terraform output -raw instance_public_ip
 
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh/
+          echo "${{ secrets.SSH_PEM_FILE }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ steps.ip.outputs.ip }} >> ~/.ssh/known_hosts
+
       - name: Deploy to EC2
         run: |
           docker save my-app | ssh -o StrictHostKeyChecking=no ec2-user@${{ steps.ip.outputs.ip }} docker load
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ steps.ip.outputs.ip }} docker run -d -p 80:3000 my-app
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ steps.ip.outputs.ip }} "docker run -d -p 80:3000 -e WEBHOOK_URL=${{ secrets.WEBHOOK_URL }} my-app"
