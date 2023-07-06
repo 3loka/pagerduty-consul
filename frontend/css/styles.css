@@ -48,6 +48,16 @@ input {
     border: 1px solid #ddd;
 }
 
+.filter-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .filter-row label {
+    margin-right: 10px;
+  }
+
 button {
     background-color: #85afc8;
     color: white;

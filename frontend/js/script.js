@@ -91,39 +91,88 @@ async function login() {
 document.getElementById('getServices').addEventListener('click', getServices);
 
 
+// async function getIssues() {
+//     // fetchOrgId()
+//     const response = await fetch(`http://${window.location.hostname}:3000/api/issues`);
+//     const issues = await response.json();
+    
+//     const issuesElement = document.getElementById('issues');
+//     console.log(issues)
+//     issuesElement.innerHTML = `
+//         <div class="table">
+//             <div class="table-header">
+//                 <div>ID</div>
+//                 <div>Description</div>
+//                 <div>Severity</div>
+//                 <div>Created At</div>
+//                 <div>Organization ID</div>
+//                 <div>Project ID</div>
+//                 <div>Event</div>
+//             </div>
+//             ${issues.map(issue => `
+//                 <div class="table-row">
+//                     <div>${issue.id}</div>
+//                     <div>${issue.description}</div>
+//                     <div>${issue.severity}</div>
+//                     <div>${new Date(issue.created).toLocaleString()}</div>
+//                     <div>${issue.organization_id}</div>
+//                     <div>${issue.project_id}</div>
+//                     <div>${issue.event}</div>
+//                 </div>
+//             `).join('')}
+//         </div>
+//     `;
+// }
+
 async function getIssues() {
-    // fetchOrgId()
     const response = await fetch(`http://${window.location.hostname}:3000/api/issues`);
     const issues = await response.json();
-    
+  
+    const severityOptions = [...new Set(issues.map(issue => issue.severity))]; // Get unique severity values
+  
     const issuesElement = document.getElementById('issues');
-    console.log(issues)
     issuesElement.innerHTML = `
-        <div class="table">
-            <div class="table-header">
-                <div>ID</div>
-                <div>Description</div>
-                <div>Severity</div>
-                <div>Created At</div>
-                <div>Organization ID</div>
-                <div>Project ID</div>
-                <div>Event</div>
-            </div>
-            ${issues.map(issue => `
-                <div class="table-row">
-                    <div>${issue.id}</div>
-                    <div>${issue.description}</div>
-                    <div>${issue.severity}</div>
-                    <div>${new Date(issue.created).toLocaleString()}</div>
-                    <div>${issue.organization_id}</div>
-                    <div>${issue.project_id}</div>
-                    <div>${issue.event}</div>
-                </div>
-            `).join('')}
+      <div>
+        <label for="severity-filter">Filter by Severity:</label>
+        <select id="severity-filter" onchange="applySeverityFilter(this.value)">
+          <option value="">All</option>
+          ${severityOptions.map(severity => `<option value="${severity}">${severity}</option>`).join('')}
+        </select>
+      </div>
+      <BR/>
+      <div class="table">
+        <div class="table-header">
+          <div>ID</div>
+          <div>Description</div>
+          <div>Severity</div>
+          <div>Created At</div>
+          <div>Organization ID</div>
+          <div>Project ID</div>
+          <div>Event</div>
         </div>
+        ${issues.map(issue => `
+          <div class="table-row">
+            <div>${issue.id}</div>
+            <div>${issue.description}</div>
+            <div>${issue.severity}</div>
+            <div>${new Date(issue.created).toLocaleString()}</div>
+            <div>${issue.organization_id}</div>
+            <div>${issue.project_id}</div>
+            <div>${issue.event}</div>
+          </div>
+        `).join('')}
+      </div>
     `;
-}
-
+  }
+  
+  function applySeverityFilter(severity) {
+    const rows = document.querySelectorAll('#issues .table-row');
+    rows.forEach(row => {
+      const rowSeverity = row.querySelector('div:nth-child(3)').textContent;
+      row.style.display = severity === '' || rowSeverity === severity ? 'block' : 'none';
+    });
+  }
+  
 
 
 

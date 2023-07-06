@@ -268,29 +268,27 @@ router.get('/clearSession', (req, res) => {
   // });
   router.get('/issues', async (req, res) => {
     try {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
       const userOrgId = req.session.userData?.orgid;
-    
+  
       if (!userOrgId) {
         return res.status(400).json({ message: 'No organization found for this user.' });
       }
-    
+  
       const issues = await Issue.findAll({
         where: {
-          created: {
-            [Sequelize.Op.gte]: oneWeekAgo
-          },
           organization_id: userOrgId // Filter by the user's organization id
-        }
+        },
+        order: [['created', 'DESC']], // Sort by 'created' in descending order
+        limit: 50 // Limit the results to the last 50 rows
       });
+      
       res.json(issues.map(issue => issue.toJSON()));
     } catch (err) {
       console.error('Error retrieving issues:', err);
       res.status(500).json({ message: 'Error retrieving issues' });
     }
-  });
+});
+
   
 
   return router;
