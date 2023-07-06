@@ -12,48 +12,63 @@ async function simulateIssue() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: '123', description: 'Test issue' })
     });
-}
-
-async function fetchOrgId(username) {
+}async function fetchOrgId() {
     try {
-      const response = await fetch(`http://${window.location.hostname}:3000/api/getOrgId?username=${username}`);
+      const response = await fetch(`http://${window.location.hostname}:3000/api/getOrgId`);
       const data = await response.json();
   
-      var org_id_element = document.createElement("h2");
+      var org_id_element = document.getElementById("orgId");
       org_id_element.textContent = "Organization ID: " + data.orgid;
-      document.body.prepend(org_id_element);
   
     } catch (err) {
       console.error('Error:', err);
     }
   }
-
-  var globalUser = "";
   
 
 
-// async function getConsulVersions() {
-//         // const response = await fetch('http://ec2-44-204-175-78.compute-1.amazonaws.com:28081/global-network-manager/2022-02-15/organizations/fc064bc9-fc9d-41ee-9e0d-11fb39e059a5/integration/3?from_app=true', {
-
-//     const response = await fetch(process.env.HCP_URL+'/global-network-manager/2022-02-15/organizations/'+process.env.HCP_ORG+'/integration/3?from_app=true', {
-//         headers: { 'Authorization': 'Bearer ' + process.env.HCP_JWT }
-//     });
-//     const consulVersions = await response.json();
-//     console.log(consulVersions);
-// }
 
 async function getServices() {
     const response = await fetch(`http://${window.location.hostname}:3000/api/services`, {
         headers: { 'Authorization': `Bearer UIPASS123321$$` }
     });
-    const consulVersions = await response.json();
-    console.log(consulVersions);
+    const services = await response.json();
+
+    const servicesElement = document.getElementById('getServices');
+    servicesElement.innerHTML = `
+        <div class="table">
+            <div class="table-header">
+                <div>Service Name</div>
+                <div>Total</div>
+                <div>Passing</div>
+                <div>Warning</div>
+                <div>Critical</div>
+                <div>Cluster</div>
+                <div>Namespace</div>
+                <div>Partition</div>
+                <div>Kind</div>
+            </div>
+            ${services.services.map(service => 
+                service.summaries.map(summary => `
+                    <div class="table-row">
+                        <div>${service.name}</div>
+                        <div>${summary.total}</div>
+                        <div>${summary.passing}</div>
+                        <div>${summary.warning}</div>
+                        <div>${summary.critical}</div>
+                        <div>${summary.cluster}</div>
+                        <div>${summary.namespace}</div>
+                        <div>${summary.partition}</div>
+                        <div>${summary.kind}</div>
+                    </div>
+                `).join('')).join('')}
+        </div>
+    `;
 }
+
 
 async function login() {
     username = document.getElementById('username').value;
-    console.log(username)
-    fetchOrgId(username);
     const password = document.getElementById('password').value;
     const response = await fetch(`http://${window.location.hostname}:3000/api/login`, {
         method: 'POST',
@@ -62,6 +77,8 @@ async function login() {
     });
     const data = await response.json();
     if (data.message === 'Login successful') {
+        getIssues().catch(console.error);
+        fetchOrgId();
         // Hide the login form and show the main content
         document.getElementById('login-form').style.display = 'none';
         document.getElementById('main-content').style.display = 'block';
@@ -75,10 +92,12 @@ document.getElementById('getServices').addEventListener('click', getServices);
 
 
 async function getIssues() {
+    // fetchOrgId()
     const response = await fetch(`http://${window.location.hostname}:3000/api/issues`);
     const issues = await response.json();
     
     const issuesElement = document.getElementById('issues');
+    console.log(issues)
     issuesElement.innerHTML = `
         <div class="table">
             <div class="table-header">
@@ -109,21 +128,31 @@ async function getIssues() {
 
 
 document.getElementById('login-button').addEventListener('click', () => {
-    // Perform login operation...
+    login();
 
     // If login is successful:
     document.getElementById('login-form').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
 });
 
-document.getElementById('logout-button').addEventListener('click', () => {
-    // Perform logout operation...
 
-    // After logout:
-    document.getElementById('login-form').style.display = 'block';
-    document.getElementById('main-content').style.display = 'none';
-});
+document.getElementById('logout-button').addEventListener('click', async () => {
+    try {
+      await fetch(`http://${window.location.hostname}:3000/api/logout`, {
+        method: 'POST', // Assuming you're using a POST request to clear the session
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      // After logout:
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('main-content').style.display = 'none';
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  });
 
+  
 
 registerWebhook().catch(console.error);
-getIssues().catch(console.error);
+
+

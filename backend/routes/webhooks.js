@@ -56,23 +56,21 @@ module.exports = function(sequelize) {
     next();
   }
 
-  router.get('/getOrgId', (req, res) => {
-    const { username } = req.query;
-    const userData = cache[username];
-    if (!userData) {
-      return res.status(400).json({ message: 'Invalid username' });
-    }
-    res.json({ orgid: userData.orgid });
-  });
+  // router.get('/getOrgId', (req, res) => {
+  //   const username = req.session.username;
+  //   const userData = cache[username];
+  //   if (!userData) {
+  //     return res.status(400).json({ message: 'Invalid username' });
+  //   }
+  //   res.json({ orgid: userData.orgid });
+  // });
   
-  
-
   router.post('/login', (req, res) => {
     const { username, password } = req.body;
   
-    if (username === 'user1' && password === 'password') {
-      // Successful login for User1
-      cache["user1"] = {
+    if (username === 'user1' && password === '') {
+      req.session.username = username;
+      req.session.userData = {
         hcp_jwt: "dummyToken1",
         orgid: "fc064bc9-fc9d-41ee-9e0d-11fb39e059a5",
         projectid: "dummyProjectId1",
@@ -80,9 +78,9 @@ module.exports = function(sequelize) {
         installationToken: "3"
       };
       res.status(200).json({ message: 'Login successful', username });
-    } else if (username === 'user2' && password === 'password') {
-      // Successful login for User2
-      cache["user2"] = {
+    } else if (username === 'user2' && password === '') {
+      req.session.username = username;
+      req.session.userData = {
         hcp_jwt: "dummyToken1",
         orgid: "fc064bc9-fc9d-41ee-9e0d-11fb39e059a5",
         projectid: "dummyProjectId1",
@@ -95,6 +93,58 @@ module.exports = function(sequelize) {
       res.status(400).json({ message: 'Invalid username or password' });
     }
   });
+
+  router.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if(err) {
+        return res.status(500).json({ message: 'Could not log out, please try again.' });
+      }
+      res.status(200).json({ message: 'Logged out successfully' });
+    });
+  });
+  
+  
+  router.get('/getOrgId', (req, res) => {
+    const userData = req.session.userData;
+    if (!userData) {
+      return res.status(400).json({ message: 'Invalid session' });
+    }
+    res.json({ orgid: userData.orgid });
+  });
+  
+  // And so on for the other routes
+  
+
+  // router.post('/login', (req, res) => {
+  //   const { username, password } = req.body;
+  
+  //   if (username === 'user1' && password === 'password') {
+  //     req.session.username = username; 
+  //     // Successful login for User1
+  //     cache["user1"] = {
+  //       hcp_jwt: "dummyToken1",
+  //       orgid: "fc064bc9-fc9d-41ee-9e0d-11fb39e059a5",
+  //       projectid: "dummyProjectId1",
+  //       url: "http://ec2-44-204-175-78.compute-1.amazonaws.com:28081",
+  //       installationToken: "3"
+  //     };
+  //     res.status(200).json({ message: 'Login successful', username });
+  //   } else if (username === 'user2' && password === 'password') {
+  //     req.session.username = username; 
+  //     // Successful login for User2
+  //     cache["user2"] = {
+  //       hcp_jwt: "dummyToken1",
+  //       orgid: "fc064bc9-fc9d-41ee-9e0d-11fb39e059a5",
+  //       projectid: "dummyProjectId1",
+  //       url: "http://ec2-44-204-175-78.compute-1.amazonaws.com:28081",
+  //       installationToken: "3"
+  //     };
+  //     res.status(200).json({ message: 'Login successful', username });
+  //   } else {
+  //     // Invalid credentials
+  //     res.status(400).json({ message: 'Invalid username or password' });
+  //   }
+  // });
 
   router.post('/events', authenticate, async (req, res) => {
     const event = req.body.payload;
@@ -148,40 +198,37 @@ module.exports = function(sequelize) {
         return res.status(400).json({ message: 'Token, OrgID and ProjectID are required' });
     }
     
-    // Store the values in the cache for the user
+    // Store the values in the session for the user
     if (token) {
-        cache[user].hcp_jwt = token;
+        req.session.userData.hcp_jwt = token;
     }
     if (orgid) {
-        cache[user].orgid = orgid;
+        req.session.userData.orgid = orgid;
     }
     if (projectid) {
-        cache[user].projectid = projectid;
+        req.session.userData.projectid = projectid;
     }
     if (url) {
-        cache[user].url = url;
+        req.session.userData.url = url;
     }
-
     if (installationToken) {
-      cache[user].installationToken = installationToken;
-  }
-
+        req.session.userData.installationToken = installationToken;
+    }
 
     res.status(200).json({ message: 'Token, OrgID and ProjectID stored successfully' });
 });
 
 router.get('/services', async (req, res) => {
-  const { username } = req.query;
-  const userData = cache[username];
+  const userData = req.session.userData;
   if (!userData) {
-      return res.status(400).json({ message: 'Invalid username' });
+      return res.status(400).json({ message: 'Invalid session' });
   }
 
   const url = `${userData.url}/global-network-manager/2022-02-15/organizations/${userData.orgid}/projects/${userData.projectid}/services?filter.kinds=KIND_TYPICAL&filter.kinds=KIND_MESH_GATEWAY&filter.kinds=KIND_INGRESS_GATEWAY&from_app=true&installation_token=${userData.installationToken}`;
 
   try {
       const response = await axios.get(url, {
-          headers: { 'Authorization': `Bearer ${userData.token}` }
+          headers: { 'Authorization': `Bearer ${userData.hcp_jwt}` }
       });
       res.json(response.data);
   } catch (err) {
@@ -190,35 +237,61 @@ router.get('/services', async (req, res) => {
   }
 });
 
-router.get('/clearCache', (req, res) => {
-  const { username } = req.query;
-  // Clear the cache for the specific user
-  cache[username] = {};
+router.get('/clearSession', (req, res) => {
+  // Clear the session data for the user
+  req.session.userData = {};
 
-  res.status(200).json({ message: 'Cache cleared successfully' });
+  res.status(200).json({ message: 'Session cleared successfully' });
 });
+
 
 
   
 
-  router.get('/issues', async (req, res) => {
-      try {
-          const oneWeekAgo = new Date();
-          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  // router.get('/issues', async (req, res) => {
+  //     try {
+  //         const oneWeekAgo = new Date();
+  //         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-          const issues = await Issue.findAll({
-            where: {
-              created: {
-                [Sequelize.Op.gte]: oneWeekAgo
-              }
-            }
-          });
-          res.json(issues.map(issue => issue.toJSON()));
-      } catch (err) {
-          console.error('Error retrieving issues:', err);
-          res.status(500).json({ message: 'Error retrieving issues' });
+  //         const issues = await Issue.findAll({
+  //           where: {
+  //             created: {
+  //               [Sequelize.Op.gte]: oneWeekAgo
+  //             }
+  //           }
+  //         });
+  //         res.json(issues.map(issue => issue.toJSON()));
+  //     } catch (err) {
+  //         console.error('Error retrieving issues:', err);
+  //         res.status(500).json({ message: 'Error retrieving issues' });
+  //     }
+  // });
+  router.get('/issues', async (req, res) => {
+    try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+      const userOrgId = req.session.userData?.orgid;
+    
+      if (!userOrgId) {
+        return res.status(400).json({ message: 'No organization found for this user.' });
       }
+    
+      const issues = await Issue.findAll({
+        where: {
+          created: {
+            [Sequelize.Op.gte]: oneWeekAgo
+          },
+          organization_id: userOrgId // Filter by the user's organization id
+        }
+      });
+      res.json(issues.map(issue => issue.toJSON()));
+    } catch (err) {
+      console.error('Error retrieving issues:', err);
+      res.status(500).json({ message: 'Error retrieving issues' });
+    }
   });
+  
 
   return router;
 }
