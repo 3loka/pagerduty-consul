@@ -113,3 +113,32 @@ button:hover {
 .tab.active {
     display: block;
 }
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .filter-row label {
+    margin-right: 10px;
+  }
+  
+  .table {
+    display: table;
+    width: 100%;
+  }
+  
+  .table-header {
+    display: table-row;
+  }
+  
+  .table-column {
+    display: table-cell;
+    padding: 8px;
+  }
+  
+  .table-row {
+    display: table-row;
+  }
+  

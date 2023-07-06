@@ -132,33 +132,32 @@ async function getIssues() {
   
     const issuesElement = document.getElementById('issues');
     issuesElement.innerHTML = `
-      <div>
+      <div class="filter-row">
         <label for="severity-filter">Filter by Severity:</label>
         <select id="severity-filter" onchange="applySeverityFilter(this.value)">
           <option value="">All</option>
           ${severityOptions.map(severity => `<option value="${severity}">${severity}</option>`).join('')}
         </select>
       </div>
-      <BR/>
       <div class="table">
         <div class="table-header">
-          <div>ID</div>
-          <div>Description</div>
-          <div>Severity</div>
-          <div>Created At</div>
-          <div>Organization ID</div>
-          <div>Project ID</div>
-          <div>Event</div>
+          <div class="table-column">ID</div>
+          <div class="table-column">Description</div>
+          <div class="table-column">Severity</div>
+          <div class="table-column">Created At</div>
+          <div class="table-column">Organization ID</div>
+          <div class="table-column">Project ID</div>
+          <div class="table-column">Event</div>
         </div>
         ${issues.map(issue => `
           <div class="table-row">
-            <div>${issue.id}</div>
-            <div>${issue.description}</div>
-            <div>${issue.severity}</div>
-            <div>${new Date(issue.created).toLocaleString()}</div>
-            <div>${issue.organization_id}</div>
-            <div>${issue.project_id}</div>
-            <div>${issue.event}</div>
+            <div class="table-column">${issue.id}</div>
+            <div class="table-column">${issue.description}</div>
+            <div class="table-column">${issue.severity}</div>
+            <div class="table-column">${new Date(issue.created).toLocaleString()}</div>
+            <div class="table-column">${issue.organization_id}</div>
+            <div class="table-column">${issue.project_id}</div>
+            <div class="table-column">${issue.event}</div>
           </div>
         `).join('')}
       </div>
@@ -168,7 +167,7 @@ async function getIssues() {
   function applySeverityFilter(severity) {
     const rows = document.querySelectorAll('#issues .table-row');
     rows.forEach(row => {
-      const rowSeverity = row.querySelector('div:nth-child(3)').textContent;
+      const rowSeverity = row.querySelector('.table-column:nth-child(3)').textContent;
       row.style.display = severity === '' || rowSeverity === severity ? 'block' : 'none';
     });
   }
