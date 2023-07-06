@@ -5,11 +5,30 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <h1>Webhook Tester</h1>
-    <button onclick="simulateIssue()">Simulate Issue</button>
+    
+    <div class="container">
+    <div id="login-form">
+        <div class="header">
+            <h1>Pageduty - Consul Integration Application</h1>
+        </div>        
+        <label for="username">Username:</label>
+        <input id="username" type="text">
+        <label for="password">Password:</label>
+        <input id="password" type="password">
+        <button id="login-button">Login</button>
+    </div>
+    <div id="main-content" style="display: none;">
+        <div class="header">
+            <h1>Pageduty - Consul Integration Application</h1>
+            <button id="logout-button">Logout</button>
+        </div>
 
-    <button onclick="getIssues()">See Issue</button>
-    <div id="issues"></div>
+        <button onclick="simulateIssue()">Simulate Issue</button>
+        <button onclick="getIssues()">See Issue</button>
+        <button id="getServices">Get all services for this project</button>
+        <div id="issues"></div>
+    </div>
+    </div>
     <script src="js/script.js"></script>
 </body>
 </html>
