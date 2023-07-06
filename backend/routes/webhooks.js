@@ -5,25 +5,29 @@ const { DataTypes } = Sequelize;
 
 module.exports = function(sequelize) {
       
-      const Issue = sequelize.define('Issue', {
-          id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true
-          },
-          description: DataTypes.STRING,
-          severity: DataTypes.STRING,
-          created: {
-            type: DataTypes.DATE,
-            defaultValue: Sequelize.NOW
-          },
-          meta: {
-            type: DataTypes.JSON,
-          }
-        }, {
-          timestamps: false,
-          tableName: 'issues',
-          freezeTableName: true
-        });
+  const Issue = sequelize.define('Issue', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true
+    },
+    organization_id: DataTypes.STRING,
+    project_id: DataTypes.STRING,
+    event: DataTypes.STRING,
+    description: DataTypes.STRING,
+    severity: DataTypes.STRING,
+    created: {
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.NOW
+    },
+    meta: {
+        type: DataTypes.JSON,
+    }
+}, {
+    timestamps: false,
+    tableName: 'issues',
+    freezeTableName: true
+});
+
   
       
 
@@ -51,6 +55,16 @@ module.exports = function(sequelize) {
   
     next();
   }
+
+  router.get('/getOrgId', (req, res) => {
+    const { username } = req.query;
+    const userData = cache[username];
+    if (!userData) {
+      return res.status(400).json({ message: 'Invalid username' });
+    }
+    res.json({ orgid: userData.orgid });
+  });
+  
   
 
   router.post('/login', (req, res) => {
@@ -82,28 +96,29 @@ module.exports = function(sequelize) {
     }
   });
 
-router.post('/events', authenticate, async (req, res) => {
-  const event = req.body.payload;
+  router.post('/events', authenticate, async (req, res) => {
+    const event = req.body.payload;
 
-  // Segregate the values for the Issue model and the meta field.
-  const { installation_id, organization_id, project_id, sender, payload: { id, description, severity } } = event;
-  const meta = { installation_id, organization_id, project_id, sender };
+    // Segregate the values for the Issue model and the meta field.
+    const { installation_id, organization_id, project_id, event: event_type, sender, payload: { id, description, severity } } = event;
+    const meta = { installation_id, sender };
 
-  // We no longer include these values when building the issue object.
-  const issueData = { id, description, severity, meta: JSON.stringify(meta) };
+    // We no longer include these values when building the issue object.
+    const issueData = { id, description, severity, organization_id, project_id, event: event_type, meta: JSON.stringify(meta) };
 
-  console.log('Received event:', issueData);
+    console.log('Received event:', issueData);
 
-  try {
-      const issue = Issue.build(issueData);
-      await issue.save();
-      console.log('Saved issue:', issue.toJSON());
-      res.status(200).end();
-  } catch (err) {
-      console.error('Error saving issue:', err);
-      res.status(500).json({ message: 'Error saving issue' });
-  }
+    try {
+        const issue = Issue.build(issueData);
+        await issue.save();
+        console.log('Saved issue:', issue.toJSON());
+        res.status(200).end();
+    } catch (err) {
+        console.error('Error saving issue:', err);
+        res.status(500).json({ message: 'Error saving issue' });
+    }
 });
+
 
 
 

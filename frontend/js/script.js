@@ -14,6 +14,24 @@ async function simulateIssue() {
     });
 }
 
+async function fetchOrgId(username) {
+    try {
+      const response = await fetch(`http://${window.location.hostname}:3000/api/getOrgId?username=${username}`);
+      const data = await response.json();
+  
+      var org_id_element = document.createElement("h2");
+      org_id_element.textContent = "Organization ID: " + data.orgid;
+      document.body.prepend(org_id_element);
+  
+    } catch (err) {
+      console.error('Error:', err);
+    }
+  }
+
+  var globalUser = "";
+  
+
+
 // async function getConsulVersions() {
 //         // const response = await fetch('http://ec2-44-204-175-78.compute-1.amazonaws.com:28081/global-network-manager/2022-02-15/organizations/fc064bc9-fc9d-41ee-9e0d-11fb39e059a5/integration/3?from_app=true', {
 
@@ -34,6 +52,8 @@ async function getServices() {
 
 async function login() {
     username = document.getElementById('username').value;
+    console.log(username)
+    fetchOrgId(username);
     const password = document.getElementById('password').value;
     const response = await fetch(`http://${window.location.hostname}:3000/api/login`, {
         method: 'POST',
@@ -66,6 +86,9 @@ async function getIssues() {
                 <div>Description</div>
                 <div>Severity</div>
                 <div>Created At</div>
+                <div>Organization ID</div>
+                <div>Project ID</div>
+                <div>Event</div>
             </div>
             ${issues.map(issue => `
                 <div class="table-row">
@@ -73,11 +96,16 @@ async function getIssues() {
                     <div>${issue.description}</div>
                     <div>${issue.severity}</div>
                     <div>${new Date(issue.created).toLocaleString()}</div>
+                    <div>${issue.organization_id}</div>
+                    <div>${issue.project_id}</div>
+                    <div>${issue.event}</div>
                 </div>
             `).join('')}
         </div>
     `;
 }
+
+
 
 
 document.getElementById('login-button').addEventListener('click', () => {
